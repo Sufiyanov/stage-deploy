@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app_3-env
+  namespace: group_name_3-{{ env }}
+data:
+  TZ: "Europe/Moscow"
+  GROUP_NAME_3_ENV: {{ env }}
+  GROUP_NAME_3_AMQP_QUEUE_ORDERS_GATE: {{ GROUP_NAME_3_AMQP_QUEUE_ORDERS_GATE }}
+  GROUP_NAME_3_AMQP_QUEUE_STATIONS_GATE: {{ GROUP_NAME_3_AMQP_QUEUE_STATIONS_GATE }}
+  GROUP_NAME_3_AMQP_QUEUE_STATIONS_HANDLER: {{ GROUP_NAME_3_AMQP_QUEUE_STATIONS_HANDLER }}
+  GROUP_NAME_3_AMQP_QUEUE_ORDERS_STATES: {{ GROUP_NAME_3_AMQP_QUEUE_ORDERS_STATES }}
+  GROUP_NAME_3_AMQP_QUEUE_JOBS: {{ GROUP_NAME_3_AMQP_QUEUE_JOBS }}
+  GROUP_NAME_3_REDIS_HOST: {{ GROUP_NAME_3_REDIS_HOST }}
+  GROUP_NAME_3_REDIS_PORT: "{{ GROUP_NAME_3_REDIS_PORT }}"
+  GROUP_NAME_3_PG_HOST: {{ GROUP_NAME_3_PG_HOST }}
+  GROUP_NAME_3_PG_USER: {{ GROUP_NAME_3_PG_USER }}
+  GROUP_NAME_3_PG_PORT: "{{ GROUP_NAME_3_PG_PORT }}"
+  GROUP_NAME_3_PG_DBNAME: {{ GROUP_NAME_3_PG_DBNAME }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app_3
+  namespace: group_name_3-{{ env }}
+spec:
+  selector:
+    app: app_3
+  ports:
+  - nodePort: 30024
+    port: 3000
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: group_name_3-{{ env }}
+  name: app_3
+spec:
+  replicas: {{ vars["app_3_replicas_count"] }}
+  selector:
+    matchLabels:
+      app: app_3
+  template:
+    metadata:
+      labels:
+        app: app_3 
+    spec:
+      containers:
+      - name: app_3
+        envFrom:
+        - configMapRef:
+            name: app_3-env
+        env:
+        - name: GROUP_NAME_3_PG_PASS
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: GROUP_NAME_3_PG_PASS
+        - name: GROUP_NAME_3_AMQP_CONNECTION
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: GROUP_NAME_3_AMQP_CONNECTION
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthcheck
+            port: 3000
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthcheck
+            port: 3000
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        startupProbe:
+          httpGet:
+            path: /healthcheck
+            port: 3000 
+          failureThreshold: 30
+          periodSeconds: 10
+        resources:
+          limits:
+            memory: "768Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+        image: {{ image_digest }}
+      imagePullSecrets:
+      - name: registry-credentials

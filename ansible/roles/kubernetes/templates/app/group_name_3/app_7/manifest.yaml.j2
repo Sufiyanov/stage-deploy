@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app_7-env
+  namespace: group_name_3-{{ env }}
+data:
+  TZ: "Europe/Moscow"
+  GROUP_NAME_3_ENV: {{ env }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app_7
+  namespace: group_name_3-{{ env }}
+spec:
+  selector:
+    app: app_7
+  ports:
+  - protocol: TCP
+    port: 3000
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: group_name_3-{{ env }}
+  name: app_7
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app_7
+  template:
+    metadata:
+      labels:
+        app: app_7 
+    spec:
+      containers:
+      - name: app_7
+        envFrom:
+        - configMapRef:
+            name: app_7-env
+        env:
+        - name: GROUP_NAME_3_DATA_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: GROUP_NAME_3_DATA_TOKEN
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthcheck
+            port: 3000
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthcheck
+            port: 3000
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        startupProbe:
+          httpGet:
+            path: /healthcheck
+            port: 3000 
+          failureThreshold: 30
+          periodSeconds: 10
+        resources:
+          limits:
+            memory: "768Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+        image: {{ image_digest }}
+        ports:
+          - containerPort: 3000
+            protocol: TCP
+      imagePullSecrets:
+      - name: registry-credentials
+

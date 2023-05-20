@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app_6-env
+  namespace: group_name_1-{{ env }}
+data:
+  TZ: "Europe/Moscow"
+  AMQP_PREFIX: {{ COMMON.AMQP_PREFIX }}
+  app_6_QUEUE: {{ COMMON.app_6_QUEUE }}
+  DB_USER: {{ COMMON.DB_CRED.app_6_USER }}
+  DB_HOST: {{ COMMON.DB_HOST }}
+  DB_DATABASE: {{ COMMON.DB_DATABASE }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: group_name_1-{{ env }}
+  name: app_6
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app_6
+  template:
+    metadata:
+      labels:
+        app: app_6
+    spec:
+      containers:
+      - name: app_6
+        envFrom:
+        - configMapRef:
+            name: app_6-env
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: COMMON.DB_CRED.app_6_PASS
+        - name: AMQP_ADDRESS
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: AMQP_ADDRESS
+        resources:
+          limits:
+            memory: "768Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+        image: {{ image_digest }}
+        ports:
+          - containerPort: 3000
+            protocol: TCP
+      imagePullSecrets:
+      - name: registry-credentials

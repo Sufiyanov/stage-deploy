@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app_6-env
+  namespace: group_name_2-{{ env }}
+data:
+  TZ: "Europe/Moscow"
+  DB_HOST: {{ OFFLINE.DB_HOST }}
+  DB_NAME: {{ OFFLINE.DB_NAME }}
+  DB_PORT: '{{ OFFLINE.DB_PORT }}'
+  DB_USER: {{ OFFLINE.s_server_sync.DB_USER }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app_6
+  namespace: group_name_2-{{ env }}
+spec:
+  selector:
+    app: app_6
+  ports:
+  - nodePort: 30099
+    port: 3000
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: group_name_2-{{ env }}
+  name: app_6
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app_6
+  template:
+    metadata:
+      labels:
+        app: app_6
+    spec:
+      containers:
+      - name: app_6
+        envFrom:
+        - configMapRef:
+            name: app_6-env
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: OFFLINE.s_server_sync.DB_PASSWORD
+        resources:
+          limits:
+            memory: "768Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+        image: {{ image_digest }}
+        ports:
+          - containerPort: 3000
+            protocol: TCP
+      imagePullSecrets:
+      - name: registry-credentials

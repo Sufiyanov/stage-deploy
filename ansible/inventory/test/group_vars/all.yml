@@ -1,0 +1,79 @@
+GROUP_NAME_1:
+    JWT: JWT_STAGE
+    API_STAND: test
+    REDIS_URL: redis://test.redis.local.ru:6379
+    REDIS_DB: 2
+    SMS_LOGIN: sms_user
+    SMS_PASSWORD: "{{ lookup('env', 'SMS_PASSWORD_{{ env }}') }}"
+    MAILER_USER: no-reply@local.ru
+    MAILER_PASSWORD: "{{ lookup('env', 'MAILER_PASSWORD_{{ env }}') }}"
+    AMQP_ADDRESS: "{{ lookup('env', 'AMQP_ADDRESS_{{ env }}') }}"
+    NOTIFIER_QUEUE: NOTIFIER_QUEUE_test
+    INDEXER_QUEUE: INDEXER_QUEUE_test
+    DB_HOST: test.pg.local.ru
+    DB_PORT: 5432
+    DB_DATABASE: test_db
+    DB_USER: api
+    DB_PASSWORD: "{{ lookup('env', 'PG_PASS_{{ env }}' ) }}"
+    RECAPTCHA_SECRET: "{{ lookup('env', 'RECAPTCHA_SECRET_{{ env }}' ) }}"
+    API_PORT: 3000
+    ES_NODE: https://test.css-business.local.ru:9200
+    ES_PREFIX: test_
+    ES_USERNAME: admin 
+    ES_PASSWORD: "{{ lookup('env', 'ES_PASSWORD_{{ env }}' ) }}"
+    ES_NODES_COUNT: 1
+    NODE_EXTRA_CA_CERTS: /etc/ssl/ca-cert.pem
+
+
+GROUP_NAME_2:
+    CARD_SALT: Wx5TF2bQ
+    DB_HOST: test.pg.local.ru
+    DB_NAME: test_db
+    DB_PASSWORD: password123
+    DB_PORT: 5432
+    DB_USER: api
+    RABBITMQ_HOST: test.rabbit.local.ru:5672
+    RABBITMQ_PASSWORD: "{{ lookup('env', 'AMQP_PASS_{{ env }}' ) }}"
+    RABBITMQ_USER: srvtest
+    RABBITMQ_QUEUE_ORDERS_INDEXER: INDEXER_QUEUE_test
+    app_3:
+        DB_USER: app_3_app
+        DB_PASSWORD: "{{ lookup('env', 'app_3_app_PASS_test' ) }}"
+    app_4:
+        DB_USER: app_4_app
+        DB_PASSWORD: "{{ lookup('env', 'app_4_PASS_test' ) }}"
+
+
+GROUP_NAME_3:
+    AMQP_ADDRESS: "{{ lookup('env', 'AMQP_CONNECTION_{{ env }}' ) }}"
+    AMQP_PREFIX: TEST_
+    ORDERS_QUEUE: API_ORDERS_{{ env }}
+    PARTNERS_QUEUE: API_PARTNERS_{{ env }}
+    STATIONS_QUEUE: API_STATIONS_{{ env }}
+    TAXI_QUEUE: API_TAXI_{{ env }}
+    USERS_QUEUE: API_USERS_{{ env }}
+    STATIONS_GPN_QUEUE: STATIONS_GPN_{{ env }}
+    STATIONS_TV2_QUEUE: STATIONS_TV2_{{ env }}
+    TK_YANDEX_QUEUE: TK_YANDEX_{{ env }}
+    DB_HOST: test.pg.local.ru
+    DB_PORT: 5432
+    DB_USER: user_app
+    DB_PASSWORD: "{{ lookup('env', 'RECAPTCHA_SECRET_{{ env }}' ) }}"
+    DB_DATABASE: test_db
+    REDIS_URL: redis://test.redis.local.ru:6379
+    REDIS_PREFIX: "test:"
+    REDIS_DB: 0
+    ES_NODES: https://test.css-business.local.ru:9200
+    ES_PREFIX: test_
+    ES_REPLICAS_DEFAULT: 0
+    DB_CRED:
+        orders_USER: common_app
+        orders_PASS: "{{ lookup('env', 'common_app_PASS_{{ env }}') }}"
+        partners_USER: common_app
+        partners_PASS: "{{ lookup('env', 'common_app_PASS_{{ env }}') }}"
+        stations_USER: common_app
+        stations_PASS: "{{ lookup('env', 'common_app_PASS_{{ env }}') }}"
+        taxi_USER: common_app
+        taxi_PASS: "{{ lookup('env', 'common_app_PASS_{{ env }}') }}"
+        users_USER: common_app
+        users_PASS: "{{ lookup('env', 'common_app_PASS_{{ env }}') }}"

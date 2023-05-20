@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app_6-env
+  namespace: group_name_3-{{ env }}
+data:
+  TZ: "Europe/Moscow"
+  GROUP_NAME_3_ENV: {{ env }}
+  GROUP_NAME_3_AMQP_QUEUE_ORDERS_GATE: {{ GROUP_NAME_3_AMQP_QUEUE_ORDERS_GATE }}
+  GROUP_NAME_3_AMQP_QUEUE_STATIONS_GATE: {{ GROUP_NAME_3_AMQP_QUEUE_STATIONS_GATE }}
+  GROUP_NAME_3_AMQP_QUEUE_CARDS_GATE: {{ GROUP_NAME_3_AMQP_QUEUE_CARDS_GATE }}
+  GROUP_NAME_3_AMQP_QUEUE_TAXI_GATE: {{ GROUP_NAME_3_AMQP_QUEUE_TAXI_GATE }}
+  GROUP_NAME_3_AMQP_QUEUE_CASH_GATE: {{ GROUP_NAME_3_AMQP_QUEUE_CASH_GATE }}
+  GROUP_NAME_3_AMQP_QUEUE_STATIONS_HANDLER: {{ GROUP_NAME_3_AMQP_QUEUE_STATIONS_HANDLER }}
+  GROUP_NAME_3_AMQP_QUEUE_ORDERS_STATES: {{ GROUP_NAME_3_AMQP_QUEUE_ORDERS_STATES }}
+  GROUP_NAME_3_AMQP_QUEUE_PUSH_GATE: {{ GROUP_NAME_3_AMQP_QUEUE_PUSH_GATE }}
+  GROUP_NAME_3_INDEXER_QUEUE: {{ GROUP_NAME_3_INDEXER_QUEUE }}
+  GROUP_NAME_3_AMQP_QUEUE_NOTIFICATION_GATE: {{ GROUP_NAME_3_AMQP_QUEUE_NOTIFICATION_GATE }}
+  GROUP_NAME_3_CHECK_URL: {{ GROUP_NAME_3_CHECK_URL }}
+  GROUP_NAME_3_REDIS_HOST: {{ GROUP_NAME_3_REDIS_HOST }}
+  GROUP_NAME_3_REDIS_PORT: "{{ GROUP_NAME_3_REDIS_PORT }}"
+  GROUP_NAME_3_PG_HOST: {{ GROUP_NAME_3_PG_HOST }}
+  GROUP_NAME_3_PG_USER: {{ GROUP_NAME_3_PG_USER }}
+  GROUP_NAME_3_PG_PORT: "{{ GROUP_NAME_3_PG_PORT }}"
+  GROUP_NAME_3_PG_DBNAME: {{ GROUP_NAME_3_PG_DBNAME }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: group_name_3-{{ env }}
+  name: app_6
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app_6
+  template:
+    metadata:
+      labels:
+        app: app_6 
+    spec:
+      containers:
+      - name: app_6
+        envFrom:
+        - configMapRef:
+            name: app_6-env
+        env:
+        - name: GROUP_NAME_3_PG_PASS
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: GROUP_NAME_3_PG_PASS
+        - name: GROUP_NAME_3_AMQP_CONNECTION
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: GROUP_NAME_3_AMQP_CONNECTION
+        resources:
+          limits:
+            memory: "768Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+        image: {{ image_digest }}
+      imagePullSecrets:
+      - name: registry-credentials
+

@@ -1,0 +1,66 @@
+app_1Version: v1
+kind: ConfigMap
+metadata:
+  name: app_1-env
+  namespace: group_name_1-{{ env }}
+data:
+  TZ: "Europe/Moscow"
+  AMQP_PREFIX: {{ COMMON.AMQP_PREFIX }}
+  STATIONS_QUEUE: {{ COMMON.STATIONS_QUEUE }}
+  REDIS_URL: {{ COMMON.REDIS_URL }}
+  REDIS_PREFIX: "{{ COMMON.REDIS_PREFIX }}"
+  REDIS_DB: '{{ COMMON.REDIS_DB }}'
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app_1
+  namespace: group_name_1-{{ env }}
+spec:
+  selector:
+    app: app_1
+  ports:
+  - nodePort: 30095
+    port: 3000
+  type: NodePort
+---
+app_1Version: apps/v1
+kind: Deployment
+metadata:
+  namespace: group_name_1-{{ env }}
+  name: app_1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app_1
+  template:
+    metadata:
+      labels:
+        app: app_1
+    spec:
+      containers:
+      - name: app_1
+        envFrom:
+        - configMapRef:
+            name: app_1-env
+        env:
+        - name: AMQP_ADDRESS
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: AMQP_ADDRESS
+        resources:
+          limits:
+            memory: "768Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+        image: {{ image_digest }}
+        ports:
+          - containerPort: 3000
+            protocol: TCP
+      imagePullSecrets:
+      - name: registry-credentials
+

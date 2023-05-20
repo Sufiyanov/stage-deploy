@@ -1,0 +1,20 @@
+- name: Deploy secret to app
+  community.okd.k8s:
+    definition: "{{ lookup('template', 'concepts/configuration/secret/' + group_name + '.yaml.j2') }}"
+    apply: yes
+    force: yes
+    validate:
+      fail_on_error: yes
+  tags:
+  - app
+
+- name: Deploy app
+  community.okd.k8s:
+    definition: "{{ lookup('template', 'app/' + group_name + '/' + app_name + '/manifest.yaml.j2') }}"
+    apply: yes
+    force: yes
+    validate:
+      fail_on_error: yes
+  tags:
+  - app
+

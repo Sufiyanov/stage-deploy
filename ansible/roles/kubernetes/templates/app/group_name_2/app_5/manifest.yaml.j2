@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app_5-env
+  namespace: group_name_2-{{ env }}
+data:
+  TZ: "Europe/Moscow"
+  DB_HOST: {{ OFFLINE.DB_HOST }}
+  DB_NAME: {{ OFFLINE.DB_NAME }}
+  DB_PORT: '{{ OFFLINE.DB_PORT }}'
+  DB_USER: {{ OFFLINE.s_server_integration.DB_USER }}
+  RABBITMQ_HOST: {{ OFFLINE.RABBITMQ_HOST }}
+  RABBITMQ_USER: {{ OFFLINE.RABBITMQ_USER }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app_5
+  namespace: group_name_2-{{ env }}
+spec:
+  selector:
+    app: app_5
+  ports:
+  - nodePort: 30094
+    port: 3000
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: group_name_2-{{ env }}
+  name: app_5
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app_5
+  template:
+    metadata:
+      labels:
+        app: app_5
+    spec:
+      containers:
+      - name: app_5
+        envFrom:
+        - configMapRef:
+            name: app_5-env
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: OFFLINE.s_server_integration.DB_PASSWORD
+        - name: RABBITMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: OFFLINE.RABBITMQ_PASSWORD
+        resources:
+          limits:
+            memory: "768Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+        image: {{ image_digest }}
+        ports:
+          - containerPort: 3000
+            protocol: TCP
+      imagePullSecrets:
+      - name: registry-credentials

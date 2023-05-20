@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app_4-env
+  namespace: group_name_3-{{ env }}
+data:
+  TZ: "Europe/Moscow"
+  GROUP_NAME_3_ENV: {{ env }}
+  GROUP_NAME_3_PAYMENT_GATEWAY_URL: {{ GROUP_NAME_3_PAYMENT_GATEWAY_URL }}
+  GROUP_NAME_3_PAYMENT_GATEWAY_USER_NAME: {{ GROUP_NAME_3_PAYMENT_GATEWAY_USER_NAME }}
+  GROUP_NAME_3_A_SUCCESS_URL: {{ GROUP_NAME_3_A_SUCCESS_URL }}
+  GROUP_NAME_3_A_FAIL_URL: {{ GROUP_NAME_3_A_FAIL_URL }}
+  GROUP_NAME_3_AMQP_QUEUE_CARDS_GATE: {{ GROUP_NAME_3_AMQP_QUEUE_CARDS_GATE }}
+  NODE_EXTRA_CA_CERTS: {{ NODE_EXTRA_CA_CERTS }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: group_name_3-{{ env }}
+  name: app_4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app_4
+  template:
+    metadata:
+      labels:
+        app: app_4 
+    spec:
+      containers:
+      - name: app_4
+        envFrom:
+        - configMapRef:
+            name: app_4-env
+        env:
+        - name: GROUP_NAME_3_AMQP_CONNECTION
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: GROUP_NAME_3_AMQP_CONNECTION
+        - name: GROUP_NAME_3_PAYMENT_GATEWAY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: GROUP_NAME_3_PAYMENT_GATEWAY_PASSWORD
+        image: {{ image_digest }}
+        volumeMounts:
+        - name: ca-cert
+          mountPath: "/etc/ssl"
+          readOnly: true
+        resources:
+          limits:
+            memory: "768Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+      volumes:
+      - name: ca-cert
+        secret:
+          secretName: credentials
+          items:
+          - key: CA_PEM
+            path: ca-cert.pem
+      imagePullSecrets:
+      - name: registry-credentials
+
+

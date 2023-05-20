@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app_4-env
+  namespace: group_name_2-{{ env }}
+data:
+  TZ: "Europe/Moscow"
+  CARD_SALT: {{ OFFLINE.CARD_SALT }}
+  DB_HOST: {{ OFFLINE.DB_HOST }}
+  DB_NAME: {{ OFFLINE.DB_NAME }}
+  DB_PASSWORD: {{ OFFLINE.DB_PASSWORD }}
+  DB_PORT: '{{ OFFLINE.DB_PORT }}'
+  DB_USER: {{ OFFLINE.DB_USER }}
+  RABBITMQ_HOST: {{ OFFLINE.RABBITMQ_HOST }}
+  RABBITMQ_PASSWORD: {{ OFFLINE.RABBITMQ_PASSWORD }}
+  RABBITMQ_USER: {{ OFFLINE.RABBITMQ_USER }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: group_name_2-{{ env }}
+  name: app_4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app_4
+  template:
+    metadata:
+      labels:
+        app: app_4
+    spec:
+      containers:
+      - name: app_4
+        envFrom:
+        - configMapRef:
+            name: app_4-env
+        image: {{ image_digest }}
+      imagePullSecrets:
+      - name: registry-credentials

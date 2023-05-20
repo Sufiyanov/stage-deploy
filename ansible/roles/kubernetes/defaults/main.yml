@@ -1,0 +1,7 @@
+docker_registry: gitlab.local.ru:5050
+NODE_EXTRA_CA_CERTS: /etc/ssl/ca-cert.pem
+FIREBASE_KEY: "{{ lookup('env', 'FIREBASE_KEY') }}"
+CENTRAL_CASH_DESK_CERT: "{{ lookup('env', 'CENTRAL_CASH_DESK_CERT') }}"
+CENTRAL_CASH_DESK_KEY: "{{ lookup('env', 'CENTRAL_CASH_DESK_KEY') }}"
+
+
