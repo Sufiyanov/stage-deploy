@@ -1,0 +1,13 @@
+Deploy app:
+  stage: deploy
+  tags: 
+    - ecs-gitlab-runner-docker
+  image: 
+    name: gitlab.local.ru:5050/cicd/deploy/ansible:2.14.2
+    entrypoint: ['']
+  script:
+  - KUBECONFIG64="KUBECONFIG64_$env"
+  - echo "${!KUBECONFIG64}" | base64 -di > ./ansible/roles/kubernetes/defaults/kubeconfig
+  - export KUBECONFIG=$(pwd)/ansible/roles/kubernetes/defaults/kubeconfig
+  - cp ./ansible/ansible.cfg /etc/ansible/ansible.cfg;
+  - ansible-playbook -i ./ansible/inventory/$env --tags "app" --extra-vars "env=$env app_name=$app_name group_name=$group_name image_digest=$image_digest" -vvvv ./ansible/deploy.yml
